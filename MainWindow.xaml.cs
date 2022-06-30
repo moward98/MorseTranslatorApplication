@@ -54,6 +54,9 @@ namespace MorseTranslatorApplication
             PrintMorseButton.Visibility = Visibility.Visible;
             PlayMorseButton.Visibility = Visibility.Visible;
             TextToMorseButton.Visibility = Visibility.Hidden;
+            MorseToTextButton.Visibility = Visibility.Visible;
+            MorseOutputLabel.Visibility = Visibility.Hidden;
+            TxButton.Visibility = Visibility.Hidden;
 
             _morseInputEnabled = false;
         }
@@ -68,7 +71,7 @@ namespace MorseTranslatorApplication
             PlayMorseButton.Visibility = Visibility.Hidden;
             MorseToTextButton.Visibility = Visibility.Hidden;
             TextToMorseButton.Visibility = Visibility.Hidden;
-
+            MorseOutputLabel.Visibility = Visibility.Hidden;
         }
 
         private void PrintMorse_Click(object sender, RoutedEventArgs e)
@@ -113,6 +116,25 @@ namespace MorseTranslatorApplication
             }
         }
 
+        private void OnKeyUpHandler(object sender, KeyEventArgs e)
+            {
+                if(e.Key == Key.M && _morseInputEnabled)
+                {
+                    if (_pressedStopwatch.IsRunning)
+                    {
+                        _pressedStopwatch.Stop();
+                        _timePressed = _pressedStopwatch.ElapsedMilliseconds;
+                        _morseInterpreter.InputClassifier(true, _timePressed);
+                        _pressedStopwatch.Reset();
+                    }
+
+                    if (!_releasedStopwatch.IsRunning)
+                    {
+                        _releasedStopwatch.Start();
+                    }
+                }
+            }
+
         private void StartTransmission(object sender, MouseEventArgs e)
         {
             if (!_morseInputEnabled)
@@ -120,6 +142,7 @@ namespace MorseTranslatorApplication
                 _morseInputEnabled = true;
                 TxButton.Text = "Stop Transmission";
                 MorseOutputLabel.Text = "";
+                TextToMorseButton.Visibility = Visibility.Hidden;
             }
             else
             {
@@ -132,26 +155,7 @@ namespace MorseTranslatorApplication
             }
 
         }
-
-        private void OnKeyUpHandler(object sender, KeyEventArgs e)
-        {
-            if(e.Key == Key.M && _morseInputEnabled)
-            {
-                if (_pressedStopwatch.IsRunning)
-                {
-                    _pressedStopwatch.Stop();
-                    _timePressed = _pressedStopwatch.ElapsedMilliseconds;
-                    _morseInterpreter.InputClassifier(true, _timePressed);
-                    _pressedStopwatch.Reset();
-                }
-
-                if (!_releasedStopwatch.IsRunning)
-                {
-                    _releasedStopwatch.Start();
-                }
-            }
-        }
-
+       
         private void PlayMorse()
         {
             Thread morseDisplaythread = new Thread(() => SoundOutput());
@@ -173,6 +177,8 @@ namespace MorseTranslatorApplication
         {
             // Call Transmitter to Transmit 
             MorseOutputText morseTranslation = _morseTx.TransmitTextMessage();
+
+            MorseOutputLabel.Visibility = Visibility.Visible;
 
             Thread morseDisplaythread = new Thread(() => RefreshOutput(morseTranslation));
             morseDisplaythread.Start();

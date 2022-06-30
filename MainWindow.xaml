@@ -5,8 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MorseTranslatorApplication"
         mc:Ignorable="d"
-        Title="Morse Code Translator" Height="350" Width="500"
-        WindowStyle="None">
+        Title="Morse Code Translator" Height="350" Width="500">
 
     <Grid Background="#FF424B54" ShowGridLines="False">
         <Grid.ColumnDefinitions>
