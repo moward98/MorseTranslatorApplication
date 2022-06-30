@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 using MorseTranslator;
 using System.Timers;
 using System.Diagnostics;
+using MorseTranslatorApplication;
 //using Utilities;
 //using System.Windows.Forms;
 
@@ -30,9 +31,10 @@ namespace MorseTranslatorApplication
 
         private Transmitter _morseTx = new Transmitter();
 
-        private Stopwatch _pressedStopwatch = new Stopwatch();
+        private MorseInputInterpreter _morseInterpreter = new MorseInputInterpreter();
 
-        private Stopwatch releasedStopwatch = new Stopwatch();
+        private Stopwatch _pressedStopwatch = new Stopwatch();
+        private Stopwatch _releasedStopwatch = new Stopwatch();
 
         private float _timeReleased = 0F;
         private float _timePressed = 0F;
@@ -51,20 +53,22 @@ namespace MorseTranslatorApplication
             InputTextBorder.Visibility = Visibility.Visible;
             PrintMorseButton.Visibility = Visibility.Visible;
             PlayMorseButton.Visibility = Visibility.Visible;
+            TextToMorseButton.Visibility = Visibility.Hidden;
 
             _morseInputEnabled = false;
         }
 
         private void MorseToText_Click(object sender, RoutedEventArgs e)
         {
-            InputInstr.Text = "Click and tap M key on keyboard to input morse";
-            MorseInField.Visibility = Visibility.Visible;
+            InputInstr.Text = "Click 'Start Transmission' And Tap Morse On The M Key To Start Transmission.";
+            TxButton.Visibility = Visibility.Visible;
             InputInstr.Visibility = Visibility.Visible;
             InputTextBorder.Visibility = Visibility.Hidden;
             PrintMorseButton.Visibility = Visibility.Hidden;
             PlayMorseButton.Visibility = Visibility.Hidden;
+            MorseToTextButton.Visibility = Visibility.Hidden;
+            TextToMorseButton.Visibility = Visibility.Hidden;
 
-            _morseInputEnabled = true;
         }
 
         private void PrintMorse_Click(object sender, RoutedEventArgs e)
@@ -93,11 +97,12 @@ namespace MorseTranslatorApplication
         {
             if (e.Key == Key.M && _morseInputEnabled)
             {
-                if (releasedStopwatch.IsRunning)
+                if (_releasedStopwatch.IsRunning)
                 {
-                    releasedStopwatch.Stop();
-                    _timeReleased = releasedStopwatch.ElapsedMilliseconds;
-                    releasedStopwatch.Reset();
+                    _releasedStopwatch.Stop();
+                    _timeReleased = _releasedStopwatch.ElapsedMilliseconds;
+                    _morseInterpreter.InputClassifier(false, _timeReleased);
+                    _releasedStopwatch.Reset();
                 }
 
                 if (!_pressedStopwatch.IsRunning)
@@ -108,6 +113,26 @@ namespace MorseTranslatorApplication
             }
         }
 
+        private void StartTransmission(object sender, MouseEventArgs e)
+        {
+            if (!_morseInputEnabled)
+            {
+                _morseInputEnabled = true;
+                TxButton.Text = "Stop Transmission";
+                MorseOutputLabel.Text = "";
+            }
+            else
+            {
+                TxButton.Text = "Start Transmission";
+                _morseInputEnabled = false;
+                _morseInterpreter.PackageClassifiedInputs();
+                MorseOutputLabel.Text = _morseInterpreter.DecodedMorse();
+                MorseOutputLabel.Visibility = Visibility.Visible;
+                TextToMorseButton.Visibility = Visibility.Visible;
+            }
+
+        }
+
         private void OnKeyUpHandler(object sender, KeyEventArgs e)
         {
             if(e.Key == Key.M && _morseInputEnabled)
@@ -116,12 +141,13 @@ namespace MorseTranslatorApplication
                 {
                     _pressedStopwatch.Stop();
                     _timePressed = _pressedStopwatch.ElapsedMilliseconds;
+                    _morseInterpreter.InputClassifier(true, _timePressed);
                     _pressedStopwatch.Reset();
                 }
 
-                if (!releasedStopwatch.IsRunning)
+                if (!_releasedStopwatch.IsRunning)
                 {
-                    releasedStopwatch.Start();
+                    _releasedStopwatch.Start();
                 }
             }
         }
